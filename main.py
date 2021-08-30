@@ -1,5 +1,5 @@
 '''
-ver 0.3.1
+ver 0.3.2
 This is a simple parser for winning characters for Tales of Maj'Eyal 1.7.4
 To change the version of the game you need to look up the patch id on the character vault website
 No exploration mode and easy difficulty because of my personal bias :)
@@ -31,24 +31,24 @@ def get_characters(mode: str = 'roguelike', diff: str = 'normal', min_lvl: int =
     elif status == 'dead':
         status_code = 'color:#FF0000'
     else:
-        return 'Wrong status'
+        return
     next_page_exists = True
     page_num = 0
     while next_page_exists:
-        URL = 'https://te4.org/characters-vault?tag_name=&tag_level_min={0}&tag_level_max=&{1}&tag_permadeath%5B%5D={2}&tag_difficulty%5B%5D={3}&tag_campaign%5B%5D=2&tag_game%5B%5D=699172&page={4}'.format(
+        page_url = 'https://te4.org/characters-vault?tag_name=&tag_level_min={0}&tag_level_max=&{1}&tag_permadeath%5B%5D={2}&tag_difficulty%5B%5D={3}&tag_campaign%5B%5D=2&tag_game%5B%5D=699172&page={4}'.format(
             min_lvl, tag_status[status], tag_mode[mode], tag_diff[diff], page_num)
-        print(URL)  # for debugging
-        page = requests.get(URL)
+        print(page_url)  # for debugging purposes
+        page = requests.get(page_url)
         sleep(randint(1, 3))
-        soup = BeautifulSoup(page.content, 'html.parser')
-        char_table = soup.find(id='characters')
-        next_page_link = soup.find(title='Go to next page')
+        page_content = BeautifulSoup(page.content, 'html.parser')
+        char_table = page_content.find(id='characters')
+        next_page_link = page_content.find(title='Go to next page')
         if next_page_link is None:
             next_page_exists = False
         else:
             page_num += 1
-        my_table = char_table.find_all(style=status_code)
-        for tag in my_table:
+        res_table = char_table.find_all(style=status_code)
+        for tag in res_table:
             characters_list.append(tag.get_text())
     return characters_list
 
@@ -74,16 +74,16 @@ def count_classes(mode: str = 'roguelike', diff: str = 'normal', min_lvl: int = 
                   'Wanderer', 'Sawbutcher', 'Gunslinger', 'Psyshot', 'Annihilator', 'Writhing One',
                   'Cultist of Entropy']
     for character in characters_list:
-        if character is not None:
+        if character is not None:  # for broken non-unicode char sheets
             characters_class = re.search(r'\s\d+\s\w+\s(.*)', character)
             if characters_class is not None:  # for broken non-unicode char sheets
                 for class_name in class_list:
                     if class_name in characters_class[1]:
                         class_stats[class_name] += 1
                         break
-    df = pd.DataFrame.from_dict(class_stats, orient='index')
-    df.to_excel('characters_{0}_{1}_{2}.xlsx'.format(mode, diff, status), header=True)
-    return df
+    data_sheet = pd.DataFrame.from_dict(class_stats, orient='index')
+    data_sheet.to_excel('characters_{0}_{1}_{2}.xlsx'.format(mode, diff, status), header=True)
+    return data_sheet
 
 
 print(count_classes('adventure', 'insane', 15, 'win'))
