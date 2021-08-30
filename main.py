@@ -1,9 +1,7 @@
 '''
-ver 0.3
+ver 0.3.1
 This is a simple parser for winning characters for Tales of Maj'Eyal 1.7.4
 To change the version of the game you need to look up the patch id on the character vault website
-Range of the page was calculated manually, because vault website is bare-bones and shows only 25 characters per page and
-doesn't show you total amount of characters or pages, will try to find a way to fix it to optimize the script.
 No exploration mode and easy difficulty because of my personal bias :)
 TODO
 Make a proper pandas data frame from parsing
@@ -34,9 +32,9 @@ def get_characters(mode: str = 'roguelike', diff: str = 'normal', min_lvl: int =
         status_code = 'color:#FF0000'
     else:
         return 'Wrong status'
-    next_page_exists = 'Yes'
+    next_page_exists = True
     page_num = 0
-    while next_page_exists == 'Yes':
+    while next_page_exists:
         URL = 'https://te4.org/characters-vault?tag_name=&tag_level_min={0}&tag_level_max=&{1}&tag_permadeath%5B%5D={2}&tag_difficulty%5B%5D={3}&tag_campaign%5B%5D=2&tag_game%5B%5D=699172&page={4}'.format(
             min_lvl, tag_status[status], tag_mode[mode], tag_diff[diff], page_num)
         print(URL)  # for debugging
@@ -46,7 +44,7 @@ def get_characters(mode: str = 'roguelike', diff: str = 'normal', min_lvl: int =
         char_table = soup.find(id='characters')
         next_page_link = soup.find(title='Go to next page')
         if next_page_link is None:
-            next_page_exists = 'No'
+            next_page_exists = False
         else:
             page_num += 1
         my_table = char_table.find_all(style=status_code)
@@ -88,4 +86,4 @@ def count_classes(mode: str = 'roguelike', diff: str = 'normal', min_lvl: int = 
     return df
 
 
-print(count_classes('adventure', 'insane', 15, 'dead'))
+print(count_classes('adventure', 'insane', 15, 'win'))
